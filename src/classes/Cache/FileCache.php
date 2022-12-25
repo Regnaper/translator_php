@@ -25,4 +25,10 @@ class FileCache extends AbstractCache
 
         file_put_contents($filePath, $valueForCache);
     }
+
+    public static function deleteCacheValue(string $cacheId): void
+    {
+        $filePath = $_SERVER['DOCUMENT_ROOT'] . "/" . self::CACHE_BASE_DIR . "/" . $cacheId . ".cache";
+        unlink($filePath);
+    }
 }

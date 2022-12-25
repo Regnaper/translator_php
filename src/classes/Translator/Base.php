@@ -21,8 +21,7 @@ class Base
     protected function getCachedValue(string $originalString)
     {
         $params = [
-            'from' => $this->fromLanguage,
-            'to' => $this->toLanguage,
+            'toLanguage' => $this->toLanguage,
             'string' => $originalString
         ];
 
@@ -34,8 +33,7 @@ class Base
     protected function setCachedValue(string $valueForCache): void
     {
         $params = [
-            'from' => $this->fromLanguage,
-            'to' => $this->toLanguage,
+            'toLanguage' => $this->toLanguage,
             'string' => $valueForCache
         ];
 
@@ -90,9 +88,34 @@ class Base
     {
         $dbResult = DB::select(self::DB_TABLE_NAME, ['*'], $values, true);
 
-        if ($arResult = $dbResult->Fetch())
+        if ($arResult = $dbResult->Fetch()) {
             DB::update(self::DB_TABLE_NAME, $values, ['id' => $arResult['id']]);
+
+            foreach ($arResult as $key => $value) {
+                if (array_key_exists($key, $values)) {
+                    $params = [
+                        'toLanguage' => $key,
+                        'string' => $value
+                    ];
+
+                    $cacheId = Cache::getCacheId($params);
+                    Cache::deleteCacheValue($cacheId);
+                }
+            }
+        }
         else
             DB::add(self::DB_TABLE_NAME, $values);
+    }
+
+    public static function getTranslates(array $filter = []): array
+    {
+        $result = [];
+
+        $dbResult = DB::select(self::DB_TABLE_NAME, ['*'], $filter);
+        while ($arResult = $dbResult->Fetch()) {
+            $result[$arResult['id']] = $arResult;
+        }
+
+        return $result;
     }
 }

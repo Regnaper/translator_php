@@ -12,6 +12,7 @@ class Base
     {
         self::$dbName = $dbName;
         $this->connection = new \PDO("mysql:host=$host;dbname=$dbName;charset=utf8", $dbUser, $dbPassword);
+        $this->connection->setAttribute( \PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     }
 
     public static function init(string $host, string $dbName, string $dbUser, string $dbPassword): self
@@ -41,7 +42,10 @@ class Base
         }
         $sqlString .= ";";
 
-        return $instance->connection->query($sqlString);
+        $dbResult = $instance->connection->query($sqlString);
+        $dbResult->setFetchMode(\PDO::FETCH_ASSOC);
+
+        return $dbResult;
     }
 
     public static function add(string $tableName, array $fields)
