@@ -3,7 +3,8 @@
 @include_once $_SERVER['DOCUMENT_ROOT'] . "/classes/Autoloader.php";
 @include_once $_SERVER['DOCUMENT_ROOT'] . "/init_db.php";
 
-use Translator\Base as Translator;
+use Translator\Base as Translator,
+    DB\Base as DB;
 
 Translator::setLocales('ru', 'kz');
 ?>
@@ -30,3 +31,5 @@ Translator::setLocales('ru', 'kz');
     Выборка переводов из базы:
     <?php print_r(Translator::getTranslates()); ?>
 </pre>
+
+<?php DB::close(); ?>

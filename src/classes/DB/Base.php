@@ -6,7 +6,7 @@ class Base
 {
     protected static self $instance;
     protected static string $dbName;
-    protected object $connection;
+    protected $connection;
 
     protected function __construct(string $host, string $dbName, string $dbUser, string $dbPassword)
     {
@@ -15,16 +15,42 @@ class Base
         $this->connection->setAttribute( \PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     }
 
+    /**
+     * Создание подключения к БД
+     * @param string $host
+     * @param string $dbName
+     * @param string $dbUser
+     * @param string $dbPassword
+     * @return static
+     */
     public static function init(string $host, string $dbName, string $dbUser, string $dbPassword): self
     {
-        if (!isset(self::$instance)) {
-            self::$instance = new self($host, $dbName, $dbUser, $dbPassword);
+        if (!isset(static::$instance)) {
+            static::$instance = new static($host, $dbName, $dbUser, $dbPassword);
         }
 
-        return self::$instance;
+        return static::$instance;
     }
 
-    public static function select(string $tableName, array $fields, array $filter = null, $orFilter = false)
+    /** Закрытие подключения к БД
+     * @return void
+     */
+    public static function close(): void
+    {
+        if (isset(static::$instance)) {
+            static::$instance->connection = null;
+        }
+    }
+
+    /** Получение данных из базы
+     * @param string $tableName
+     * @param array $fields массив полей выбираемых из базы данных
+     * @param array|null $filter ассоциативный массив фильтра выборки ['поле' => 'значение']
+     * @param bool $orFilter флаг переключения фильтра на OR вместо AND
+     * @return false|\PDOStatement
+     * @throws \PDOException|\Exception
+     */
+    public static function select(string $tableName, array $fields, array $filter = null, bool $orFilter = false)
     {
         if (!isset(self::$instance))
             throw new \Exception("Не заданы параметры подключения к базе данных.");
@@ -48,7 +74,13 @@ class Base
         return $dbResult;
     }
 
-    public static function add(string $tableName, array $fields)
+    /** Добавление строки в базу данных
+     * @param string $tableName
+     * @param array $fields ассоциативный массив добавляемых данных ['поле' => 'значение']
+     * @return bool
+     * @throws \Exception
+     */
+    public static function add(string $tableName, array $fields): bool
     {
         if (!isset(self::$instance))
             throw new \Exception("Не заданы параметры подключения к базе данных.");
@@ -60,7 +92,14 @@ class Base
         return $instance->connection->prepare($sqlString)->execute();
     }
 
-    public static function update(string $tableName, array $fields, array $filter = null)
+    /** Обновление строки в базе данных
+     * @param string $tableName
+     * @param array $fields ассоциативный массив добавляемых данных ['поле' => 'значение']
+     * @param array|null $filter ассоциативный массив фильтра выборки для обновления ['поле' => 'значение']
+     * @return bool
+     * @throws \Exception
+     */
+    public static function update(string $tableName, array $fields, array $filter = null): bool
     {
         if (!isset(self::$instance))
             throw new \Exception("Не заданы параметры подключения к базе данных.");
@@ -87,7 +126,13 @@ class Base
         return $instance->connection->prepare($sqlString)->execute();
     }
 
-    public static function createTable(string $tableName, array $fields)
+    /** Создание таблицы в базе данных при её отсутствии
+     * @param string $tableName
+     * @param array $fields ассоциативный массив полей таблицы ['название поля' => 'тип и аттрибуты']
+     * @return bool
+     * @throws \PDOException|\Exception
+     */
+    public static function createTable(string $tableName, array $fields): bool
     {
         if (!isset(self::$instance))
             throw new \Exception("Не заданы параметры подключения к базе данных.");
